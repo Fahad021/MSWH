@@ -224,18 +224,12 @@ class Plot(object):
                 * np.nan
             )
 
-            col_inx = 0
-            for i in data:
-                if isinstance(i, list):
-                    i_list = i
-                else:
-                    i_list = i.tolist()
+            for col_inx, i in enumerate(data):
+                i_list = i if isinstance(i, list) else i.tolist()
                 df_data[col_inx] = (
                     i_list
                     + (np.empty(df_data.shape[0] - len(i)) * np.nan).tolist()
                 )
-                col_inx += 1
-
             data = df_data.copy()
 
         if self.duration_curve:
@@ -262,23 +256,20 @@ class Plot(object):
             log.error(msg)
             raise Exception
 
-        plot_data = []
-
-        for col_index in range(0, num_columns, 2):
-            plot_data.append(
-                go.Scatter(
-                    x=data.iloc[:, col_index],
-                    y=data.iloc[:, col_index + 1],
-                    mode=list_modes[int(col_index / 2.0)],
-                    name=data.columns[col_index + 1],
-                )
+        plot_data = [
+            go.Scatter(
+                x=data.iloc[:, col_index],
+                y=data.iloc[:, col_index + 1],
+                mode=list_modes[int(col_index / 2.0)],
+                name=data.columns[col_index + 1],
             )
-
+            for col_index in range(0, num_columns, 2)
+        ]
         fig = go.Figure(data=plot_data, layout=self.layout)
 
         if self.save_image:
 
-            if self.outpath == None:
+            if self.outpath is None:
                 self.outpath = os.getcwd()
             if not os.path.exists(self.outpath):
                 os.makedirs(self.outpath)
@@ -352,8 +343,7 @@ class Plot(object):
                 * np.nan
             )
 
-            col_inx = 0
-            for i in data:
+            for col_inx, i in enumerate(data):
                 if isinstance(i, np.ndarray):
                     df_data[col_inx] = np.concatenate(
                         (
@@ -372,8 +362,6 @@ class Plot(object):
                             0
                         ].tolist()
                     )
-                col_inx += 1
-
             data = df_data.copy()
 
         if index_in_a_column is not None:
@@ -387,34 +375,27 @@ class Plot(object):
 
         num_columns = data.shape[1]
 
-        if not isinstance(modes, list):
-            list_modes = [modes] * num_columns
-        else:
-            list_modes = modes
-
+        list_modes = [modes] * num_columns if not isinstance(modes, list) else modes
         if self.duration_curve:
             for col_index in range(0, num_columns):
                 data.iloc[:, col_index] = (
                     data.iloc[:, col_index].sort_values(ascending=False).values
                 )
 
-        plot_data = []
-
-        for col_index in range(num_columns):
-            plot_data.append(
-                go.Scatter(
-                    x=labels_h_axis,
-                    y=data.iloc[:, col_index],
-                    mode=list_modes[col_index],
-                    name=data.columns[col_index],
-                )
+        plot_data = [
+            go.Scatter(
+                x=labels_h_axis,
+                y=data.iloc[:, col_index],
+                mode=list_modes[col_index],
+                name=data.columns[col_index],
             )
-
+            for col_index in range(num_columns)
+        ]
         fig = go.Figure(data=plot_data, layout=self.layout)
 
         if self.save_image:
 
-            if self.outpath == None:
+            if self.outpath is None:
                 self.outpath = os.getcwd()
             if not os.path.exists(self.outpath):
                 os.makedirs(self.outpath)
@@ -471,27 +452,21 @@ class Plot(object):
         """
 
         # Extract y values
-        y = dict()
-        x = dict()
-        trace = dict()
-        df_ctg = dict()
-        data = list()
-        i = 0
-
-        for df in dfs:
+        y = {}
+        x = {}
+        trace = {}
+        df_ctg = {}
+        data = []
+        for i, df in enumerate(dfs):
 
             y[i] = df[plot_cols[i]].values.tolist()
 
-            if (groupby_cols is not None) and (groupby_cols[i] is not None):
-                x[i] = df[groupby_cols[i]].values.tolist()
-            else:
-                x[i] = None
-
-            if df_cat[i] is not None:
-                df_ctg[i] = df_cat[i]
-            else:
-                df_ctg[i] = ""
-
+            x[i] = (
+                df[groupby_cols[i]].values.tolist()
+                if (groupby_cols is not None) and (groupby_cols[i] is not None)
+                else None
+            )
+            df_ctg[i] = df_cat[i] if df_cat[i] is not None else ""
             trace[i] = go.Box(
                 y=y[i],
                 x=x[i],
@@ -502,13 +477,11 @@ class Plot(object):
             )
 
             data.append(trace[i])
-            i += 1
-
         fig = go.Figure(data=data, layout=self.boxlayout)
 
         if self.save_image:
 
-            if self.outpath == None:
+            if self.outpath is None:
                 self.outpath = os.getcwd()
             if not os.path.exists(self.outpath):
                 os.makedirs(self.outpath)

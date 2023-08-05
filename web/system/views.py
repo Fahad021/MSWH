@@ -115,7 +115,7 @@ def comp_form(request, component_id):
     # Retrieve the requested component from the DB
     component = get_object_or_404(Component, pk=component_id)
     errors = []
-    par = dict()
+    par = {}
     i = 0
 
     # Retrieve form entries from edit template and strip leading and trailing spaces
@@ -128,8 +128,8 @@ def comp_form(request, component_id):
 
     # Retrieve all parameters
     while True:
-        key = request.POST.get("param_key-{}".format(i), "undefined")
-        val = request.POST.get("param_val-{}".format(i), "undefined")
+        key = request.POST.get(f"param_key-{i}", "undefined")
+        val = request.POST.get(f"param_val-{i}", "undefined")
         i += 1
         # Break the query as soon as all parameters have been retrieved
         if key == "undefined":
@@ -141,10 +141,10 @@ def comp_form(request, component_id):
             if key not in par:
                 par[key] = val
             else:
-                errors.append("Key '{}' appears more than once.".format(key))
+                errors.append(f"Key '{key}' appears more than once.")
 
     # Cycle through retrieved parameters for checks and conversions
-    for key in par:
+    for key, value in par.items():
         # Check if value is of type int or float and convert it if yes
         try:
             par[key] = int(par[key])
@@ -154,12 +154,8 @@ def comp_form(request, component_id):
             except Exception:
                 # This means that par[key] will be stored as string
                 # Check if it is empty or only whitespace(s)
-                if par[key] == "" or par[key].isspace():
-                    errors.append(
-                        "Value of '{}' cannot be empty or only whitespace(s).".format(
-                            key
-                        )
-                    )
+                if value == "" or par[key].isspace():
+                    errors.append(f"Value of '{key}' cannot be empty or only whitespace(s).")
                 # Strip leading and tailing spaces
                 par[key] = par[key].lstrip().rstrip()
 
@@ -169,7 +165,7 @@ def comp_form(request, component_id):
 
     # Check if new component name does already exist in DB
     if Component.objects.filter(name=name).count() and name != component.name:
-        errors.append("Object with the name '{}' already exists.".format(name))
+        errors.append(f"Object with the name '{name}' already exists.")
 
     # Check if description is empty
     if description == "" or description.isspace():
@@ -187,12 +183,7 @@ def comp_form(request, component_id):
         except Exception:
             errors.append("Size field must contain float value.")
 
-    # Check other stuff and add it to the list of errors
-    # if <check_for_error>:
-    #    errors.append('Error message')
-
-    # If there exist errors, display an error message for each
-    if len(errors) > 0:
+    if errors:
         return render(
             request,
             "system/component/edit.html",
@@ -201,24 +192,23 @@ def comp_form(request, component_id):
                 "errors": errors,
             },
         )
-    else:
-        # Convert the parameters to a string for storage in DB
-        params = repr(par)
+    # Convert the parameters to a string for storage in DB
+    params = repr(par)
 
-        # Updates retrieved values to object in DB
-        Component.objects.filter(pk=component_id).update(
-            name=name,
-            params=params,
-            description=description,
-            size=size,
-        )
+    # Updates retrieved values to object in DB
+    Component.objects.filter(pk=component_id).update(
+        name=name,
+        params=params,
+        description=description,
+        size=size,
+    )
 
-        # Always return an HttpResponseRedirect after successfully dealing
-        # with POST data. This prevents data from being posted twice if a
-        # user hits the Back button.
-        return HttpResponseRedirect(
-            reverse("sys:comp_detail", args=(component_id,))
-        )
+    # Always return an HttpResponseRedirect after successfully dealing
+    # with POST data. This prevents data from being posted twice if a
+    # user hits the Back button.
+    return HttpResponseRedirect(
+        reverse("sys:comp_detail", args=(component_id,))
+    )
 
 
 # Show the edit view for the given component
@@ -235,8 +225,8 @@ def comp_add_par(request, component_id):
         if "param" not in params:
             params["param"] = "undefined"
             break
-        elif "param_{}".format(i) not in params:
-            params["param_{}".format(i)] = "undefined"
+        elif f"param_{i}" not in params:
+            params[f"param_{i}"] = "undefined"
             break
         else:
             i += 1
@@ -261,7 +251,7 @@ def climate_populate(request):
 
     # Use path to SWH database defined in settings.py
     swh_db_path = settings.SWH_DATABASE
-    log.info('Using SWH database "{}"'.format(swh_db_path))
+    log.info(f'Using SWH database "{swh_db_path}"')
 
     db = Sql(swh_db_path)
     log.info("Connected to database.")
@@ -280,11 +270,7 @@ def climate_populate(request):
     n_climate_zones = Climate.objects.all().count()
     if n_climate_zones > 0:
         Climate.objects.all().delete()
-        log.info(
-            "Deleted {} Climate object(s) from database.".format(
-                n_climate_zones
-            )
-        )
+        log.info(f"Deleted {n_climate_zones} Climate object(s) from database.")
         n_climate_zones = 0
 
     # Use climate data source as defined in settings.py
@@ -306,16 +292,14 @@ def climate_populate(request):
             climate_zone=climate_zone_id_str,
             data_source=data_source,
         )
-        log.info("\nCreated Climate object {} successfully.".format(climate))
+        log.info(f"\nCreated Climate object {climate} successfully.")
 
         climate.populate_data(climate_data)
-        log.info(
-            "Populated data of Climate object {} successfully.".format(climate)
-        )
+        log.info(f"Populated data of Climate object {climate} successfully.")
 
         n_climate_zones += 1
 
-    msg = "\nPopulated {} climate zones.".format(n_climate_zones)
+    msg = f"\nPopulated {n_climate_zones} climate zones."
     log.info(msg)
 
     return redirect("sys:config_home")
@@ -380,7 +364,7 @@ def proj_set_name(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
     # Retrieve form entries (if value is not found, use the previous value)
-    name = request.POST.get("name_" + str(project.id), "undefined")
+    name = request.POST.get(f"name_{str(project.id)}", "undefined")
 
     if name != "undefined" and name and name != "":
         project.name = name
@@ -410,8 +394,8 @@ def proj_form(request, project_id):
 
     # Retrieve all households
     while True:
-        occ = request.POST.get("occ-{}".format(i), "undefined")
-        ah = request.POST.get("at_home-{}".format(i), "undefined")
+        occ = request.POST.get(f"occ-{i}", "undefined")
+        ah = request.POST.get(f"at_home-{i}", "undefined")
         i += 1
         # Break the query as soon as all values have been retrieved
         if occ == "undefined":
@@ -481,7 +465,7 @@ def config_delete(request, configuration_id):
 
     # Delete the pickle file containing results (if existing)
     if config.results_path != "undefined":
-        delete_pickle("data/" + config.results_path)
+        delete_pickle(f"data/{config.results_path}")
 
     # Delete the Configuration object
     config.delete()
@@ -494,7 +478,7 @@ def config_set_name(request, configuration_id):
     config = get_object_or_404(Configuration, pk=configuration_id)
 
     # Retrieve form entries (if value is not found, use the previous value)
-    name = request.POST.get("name_" + str(config.id), "undefined")
+    name = request.POST.get(f"name_{str(config.id)}", "undefined")
 
     if name != "undefined" and name and name != "":
         config.name = name
@@ -570,15 +554,12 @@ def config_invoke(request, configuration_id):
     # Retrieve the requested component from the DB
     config = get_object_or_404(Configuration, pk=configuration_id)
 
-    # Check if config has been assigned
-    errors = config.check_config()
-    if errors:
+    if errors := config.check_config():
         for error in errors:
             log.error(error)
 
         return redirect("sys:config_home")
     else:
-
         # *hg Add check if config already has been assigned a project object
         try:
             loads = config.project.get_data()
@@ -612,15 +593,15 @@ def config_invoke(request, configuration_id):
         bckp_sizes = config.get_sizes_pd(backup=True)
 
         # Pack simulation parameters in a dictionary
-        args = dict()
-        args["type"] = config.type
-        args["sizes"] = sizes
-        args["loads"] = loads
-        args["weather"] = weather
-        args["params"] = params
-        args["bckp_sizes"] = bckp_sizes
-        args["bckp_params"] = bckp_params
-
+        args = {
+            "type": config.type,
+            "sizes": sizes,
+            "loads": loads,
+            "weather": weather,
+            "params": params,
+            "bckp_sizes": bckp_sizes,
+            "bckp_params": bckp_params,
+        }
         try:
             # Invoke the system simulation
             results = config.invoke_simulation(args)
@@ -629,14 +610,14 @@ def config_invoke(request, configuration_id):
             file_name = create_filename_pickle(
                 ["results", str(config.type), str(config.id)]
             )
-            store_pickle(results, "data/" + file_name)
+            store_pickle(results, f"data/{file_name}")
             config.set_results_path(file_name)
 
             # Redirect to the visualization page
             return redirect("sys:vi_list")
 
         except Exception as ex:
-            log.error("Simulation could not be invoked: {}".format(ex))
+            log.error(f"Simulation could not be invoked: {ex}")
             return redirect("sys:config_home")
 
 
@@ -661,9 +642,9 @@ def vi_list(request):
             try:
                 plots.append(
                     create_plot(
-                        results=load_pickle("data/" + file_name),
+                        results=load_pickle(f"data/{file_name}"),
                         name=config.name,
-                        id="{}".format(config.id),
+                        id=f"{config.id}",
                     )
                 )
             except Exception as ex:
@@ -684,9 +665,9 @@ def vi_plot(request, configuration_id):
     try:
         file_name = config.results_path
         plot = create_plot(
-            results=load_pickle("data/" + file_name),
+            results=load_pickle(f"data/{file_name}"),
             name=config.name,
-            id="{}".format(config.id),
+            id=f"{config.id}",
         )
     except Exception as ex:
         log.error(ex)

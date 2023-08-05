@@ -23,8 +23,7 @@ class ComponentManager(models.Manager):
 
     # Create a new component object with given parameters
     def create_component(self, name, type):
-        component = self.create(name=name, type=type)
-        return component
+        return self.create(name=name, type=type)
 
 
 # Component class
@@ -77,10 +76,9 @@ class ClimateManager(models.Manager):
 
     # Create a new weather object with given parameters
     def create_climate(self, name, climate_zone, data_source):
-        climate = self.create(
+        return self.create(
             name=name, climate_zone=climate_zone, data_source=data_source
         )
-        return climate
 
 
 # Climate class
@@ -189,20 +187,13 @@ class Project(models.Model):
 
     # Get dictionary with households' configuration
     def get_households(self):
-        households = {}
-
-        # Create a dictionary containing the configuration of the households
-        for id in range(self.size):
-            households.update(
-                {
-                    id: {
-                        "occupancy": self.get_occupancy()[id],
-                        "at_home": self.get_at_home()[id],
-                    }
-                }
-            )
-
-        return households
+        return {
+            id: {
+                "occupancy": self.get_occupancy()[id],
+                "at_home": self.get_at_home()[id],
+            }
+            for id in range(self.size)
+        }
 
     # Retrieve data from the project object
     def get_data(self):
@@ -221,8 +212,7 @@ class ConfigurationManager(models.Manager):
 
     # Create a new configuration object with given parameters
     def create_configuration(self, type):
-        config = self.create(name=s[type], type=type)
-        return config
+        return self.create(name=s[type], type=type)
 
 
 # Model class
@@ -288,14 +278,14 @@ class Configuration(models.Model):
         if len(self.components.all()) == 0:
             errors.append("No components assigned.")
 
-        return False if len(errors) == 0 else errors
+        return False if not errors else errors
 
     # Return all component parameters as pandas DataFrame
     def get_params_pd(self, backup=False):
         # Retrieve all components of this configuration
         component_set = self.components.all()
 
-        if len(list(component_set)) == 0:
+        if not list(component_set):
             return False
 
         # Define which components to fetch
@@ -320,16 +310,14 @@ class Configuration(models.Model):
                 missing_components.remove(comp.type)
             else:
                 continue
-            params_rows = []
-            for key, val in comp.get_params().items():
-                params_rows.append(
-                    {
-                        s["comp"]: s[comp.type],
-                        s["param"]: s[key] if key in s else "Undefined",
-                        s["param_value"]: val,
-                    }
-                )
-
+            params_rows = [
+                {
+                    s["comp"]: s[comp.type],
+                    s["param"]: s[key] if key in s else "Undefined",
+                    s["param_value"]: val,
+                }
+                for key, val in comp.get_params().items()
+            ]
             # Fill DataFrame with retrieved parameters
             params_pd = params_pd.append(params_rows, ignore_index=True)
 
@@ -343,7 +331,7 @@ class Configuration(models.Model):
         # Retrieve all components of this configuration
         component_set = self.components.all()
 
-        if len(list(component_set)) == 0:
+        if not list(component_set):
             return False
 
         # Define which components to fetch
@@ -374,14 +362,14 @@ class Configuration(models.Model):
 
             if backup:
                 # Create a backup size for each individual household
-                for id in range(1, self.project.size + 1):
-                    sizes_rows.append(
-                        {
-                            c["id"]: id,
-                            s["comp"]: s[comp.type],
-                            s["cap"]: comp.size,
-                        }
-                    )
+                sizes_rows.extend(
+                    {
+                        c["id"]: id,
+                        s["comp"]: s[comp.type],
+                        s["cap"]: comp.size,
+                    }
+                    for id in range(1, self.project.size + 1)
+                )
             else:
                 sizes_rows.append(
                     {s["comp"]: s[comp.type], s["cap"]: comp.size}

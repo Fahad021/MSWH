@@ -25,12 +25,10 @@ def reset_database():
     command = ['git', 'restore', db_name]
     log.info("Restoring local database to most recent commit")
     process = subprocess.run(command, capture_output=True)
-    stdout = process.stdout.decode("utf-8")
-    # If there is no output, command was invoked successfully
-    if (not stdout):
-        result = False
-        log.info('Database successfully restored')
-    else:
+    if stdout := process.stdout.decode("utf-8"):
         result = stdout
         log.error(result)
+    else:
+        result = False
+        log.info('Database successfully restored')
     return result

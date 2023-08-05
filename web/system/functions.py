@@ -94,9 +94,7 @@ class Map:
         self._s = system_labels
 
     def __str__(self):
-        return "Components:\n{}\nSystems:\n{}".format(
-            str(self.components), str(self.systems)
-        )
+        return f"Components:\n{str(self.components)}\nSystems:\n{str(self.systems)}"
 
     # @property
     # def components(self):
@@ -111,27 +109,25 @@ class Map:
     def get_component_choices(self):
         li = []
         for key, val in self.components.items():
-            pairs = []
-            for t in val["types"]:
-                pairs.append([t, self._s[t] if t in self._s else "Undefined"])
+            pairs = [
+                [t, self._s[t] if t in self._s else "Undefined"]
+                for t in val["types"]
+            ]
             li.append([key, pairs])
         return li
 
     # Used in Configuration class for choices of type field
     # Output form: [ ['system1', 'System 1 - Readable'], ['system2', 'System 2 - Readable'] ]
     def get_system_choices(self):
-        li = []
-        for sys in self.systems:
-            li.append([sys, self._s[sys] if sys in self._s else "Undefined"])
-        return li
+        return [
+            [sys, self._s[sys] if sys in self._s else "Undefined"]
+            for sys in self.systems
+        ]
 
     # Used for listing components in comp_list view function
     # Output form: {'component_class1': ['comp1', 'comp2'], 'component_class2': ['comp3', 'comp4']}
     def get_component_types(self):
-        dic = {}
-        for key, val in self.components.items():
-            dic[key] = val["types"]
-        return dic
+        return {key: val["types"] for key, val in self.components.items()}
 
     # Returns a list of components for a given system
     # Output form: ['comp1', 'comp2', 'comp3']
@@ -152,10 +148,7 @@ class Map:
     # Used for instantiating external classes
     # Use like this: sys = Map().get_system_class()[<type of system>]( ... )
     def get_system_class(self):
-        dic = {}
-        for key, val in self.systems.items():
-            dic[key] = val["class"]
-        return dic
+        return {key: val["class"] for key, val in self.systems.items()}
 
     # This will be deprecated, when using simulate()    -> maybe still leave it hear, for generalizability ???
     # def get_system_function(self, system):
@@ -216,25 +209,7 @@ def simulate_system(args):
     # Invoke simulation of the respective system configuration
     cons_total, proj_total, sys_res = sys.simulate(type=args["type"])
 
-    # Results are packed like this:
-    # cons_total : [pd DataFrame]
-    # proj_total : [pd Series]
-    # sys_res    : [list] = 0 proj_total_dict,
-    #                       1 sol_fra,
-    #                       2 pump_el_use,
-    #                       3 pump_op_hour,
-    #                       4 ts_res,
-    #                       5 backup_ts_cons,     -> only for solar_thermal
-    #                       6 rel_err
-
-    # Create dictionary with only the used components of the results
-    results = dict()
-    # results['cons_total'] = cons_total
-    results["proj_total"] = sys_res[0]
-    results["ts_res"] = sys_res[4]
-    results["sol_fra"] = sys_res[1]
-
-    return results
+    return {"proj_total": sys_res[0], "ts_res": sys_res[4], "sol_fra": sys_res[1]}
 
 
 # Create a dictionary containing all plot data in the form of 'plot_data'
@@ -272,7 +247,7 @@ def create_plot(results, name, id):
     }
 
     # Add the project totals to totals_data
-    totals_data.update(results["proj_total"])
+    totals_data |= results["proj_total"]
 
     for key, val in results["proj_total"].items():
         # Convert from Kelvin to Celsius
@@ -281,9 +256,7 @@ def create_plot(results, name, id):
             and ("Drop" not in key)
             and (key not in FILTER)
         ):
-            totals_data.update(
-                {key: round(UnitConv(val).degC_K(unit_in="K"), 2)}
-            )
+            totals_data[key] = round(UnitConv(val).degC_K(unit_in="K"), 2)
 
     totals = {"totals": totals_data}
 
@@ -299,18 +272,15 @@ def create_plot(results, name, id):
         if key not in FILTER:
             series["series"][key] = {"name": key, "data": ts_res[key].tolist()}
 
-    # Create a dictionary containing the graph data (id holds the config id)
-    plot = {
-        "name": name,
-        "id": id,
-        "index": json.dumps(hours2datetime(2018, len(ts_res.index))),
-    }
-
-    # Add the data key value pairs
-    plot.update(series)
-    plot.update(totals)
-
-    return plot
+    return (
+        {
+            "name": name,
+            "id": id,
+            "index": json.dumps(hours2datetime(2018, len(ts_res.index))),
+        }
+        | series
+        | totals
+    )
 
 
 # Convert hours of year to strftime formated datetime string
@@ -357,7 +327,7 @@ def delete_pickle(file_name):
     try:
         os.remove(file_name)
     except:
-        log.error('File "{}" not found.'.format(file_name))
+        log.error(f'File "{file_name}" not found.')
 
 
 # Create a file name to pickle data
@@ -391,11 +361,7 @@ def check_params(p):
 
 # Convert dictionary formatted string to a dictionary
 def str2dict(s):
-    if check_params(s):
-        d = ast.literal_eval(s)
-    else:
-        d = {"not_valid": "not_valid"}
-    return d
+    return ast.literal_eval(s) if check_params(s) else {"not_valid": "not_valid"}
 
 
 # Convert pandas DataFrame to a dictionary
@@ -444,7 +410,7 @@ def get_np_random_state():
 def get_random_project(size):
     proj = {"occ": [], "at_home": []}
 
-    for i in range(size):
+    for _ in range(size):
         proj["occ"].append(np.random.randint(1, 7))
         proj["at_home"].append("y" if np.random.randint(1, 100) <= 50 else "n")
 

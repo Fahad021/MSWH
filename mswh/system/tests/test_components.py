@@ -21,18 +21,18 @@ class ConverterTests(unittest.TestCase):
     """Unit tests for the system component models."""
 
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         """Assigns values to test variables."""
         # Save plot images
-        self.plot_results = True
+        cls.plot_results = True
 
         # get labels
-        self.c = SwhLabels().set_hous_labels()
-        self.s = SwhLabels().set_prod_labels()
-        self.r = SwhLabels().set_res_labels()
+        cls.c = SwhLabels().set_hous_labels()
+        cls.s = SwhLabels().set_prod_labels()
+        cls.r = SwhLabels().set_res_labels()
 
         # gross collector area
-        self.gross_area = 1.0  # [m3]
+        cls.gross_area = 1.0
 
         # get solar radiation on 1m2 of a collector
         # with orientation (tilt, azimuth) = (latitude, 0)
@@ -54,158 +54,143 @@ class ConverterTests(unittest.TestCase):
             msg = "Failed to read input tables from {}."
             log.error(msg.format(weather_db_path))
 
-        self.weather = SourceAndSink(input_dfs=inputs)
+        cls.weather = SourceAndSink(input_dfs=inputs)
 
         # Arcata
-        cold = self.weather.irradiation_and_water_main(
-            "01", method="isotropic diffuse"
-        )
+        cold = cls.weather.irradiation_and_water_main("01", method="isotropic diffuse")
 
-        self.cold = cold[[self.c["irrad_on_tilt"], self.c["t_amb_C"]]]
+        cls.cold = cold[[cls.c["irrad_on_tilt"], cls.c["t_amb_C"]]]
 
         # LBNL
-        mild = self.weather.irradiation_and_water_main(
-            "03", method="isotropic diffuse"
-        )
-        self.mild = mild[[self.c["irrad_on_tilt"], self.c["t_amb_C"]]]
+        mild = cls.weather.irradiation_and_water_main("03", method="isotropic diffuse")
+        cls.mild = mild[[cls.c["irrad_on_tilt"], cls.c["t_amb_C"]]]
 
         # Palm Springs
-        hot = self.weather.irradiation_and_water_main(
-            "15", method="isotropic diffuse"
-        )
-        self.hot = hot[[self.c["irrad_on_tilt"], self.c["t_amb_C"]]]
+        hot = cls.weather.irradiation_and_water_main("15", method="isotropic diffuse")
+        cls.hot = hot[[cls.c["irrad_on_tilt"], cls.c["t_amb_C"]]]
 
         # average collector inlet temperature
-        self.t_col_in = UnitConv(35.0).degC_K(unit_in="degC")  # [K]
+        cls.t_col_in = UnitConv(35.0).degC_K(unit_in="degC")
 
         # for single time step
-        self.inc_rad = 1000.0  # [W/m2]
-        self.t_amb = UnitConv(25.0).degC_K(unit_in="degC")  # [K]
+        cls.inc_rad = 1000.0
+        cls.t_amb = UnitConv(25.0).degC_K(unit_in="degC")
 
         # PV size (the parameters will follow below)
         pv_size = 1000.0
 
         sizes = pd.DataFrame(
-            data=[
-                [self.s["sol_col"], self.gross_area],
-                [self.s["pv"], pv_size],
-            ],
-            columns=[self.s["comp"], self.s["cap"]],
+            data=[[cls.s["sol_col"], cls.gross_area], [cls.s["pv"], pv_size]],
+            columns=[cls.s["comp"], cls.s["cap"]],
         )
 
         sol_cd_params = pd.DataFrame(
             data=[
-                [self.s["sol_col"], self.s["interc_cd"], 0.75],
-                [self.s["sol_col"], self.s["a1_cd"], -3.688],
-                [self.s["sol_col"], self.s["a2_cd"], -0.0055],
+                [cls.s["sol_col"], cls.s["interc_cd"], 0.75],
+                [cls.s["sol_col"], cls.s["a1_cd"], -3.688],
+                [cls.s["sol_col"], cls.s["a2_cd"], -0.0055],
             ],
-            columns=[self.s["comp"], self.s["param"], self.s["param_value"]],
+            columns=[cls.s["comp"], cls.s["param"], cls.s["param_value"]],
         )
 
         sol_hwb_params = pd.DataFrame(
             data=[
-                [self.s["sol_col"], self.s["interc_hwb"], 0.753],
-                [self.s["sol_col"], self.s["slope_hwb"], -4.025],
+                [cls.s["sol_col"], cls.s["interc_hwb"], 0.753],
+                [cls.s["sol_col"], cls.s["slope_hwb"], -4.025],
             ],
-            columns=[self.s["comp"], self.s["param"], self.s["param_value"]],
+            columns=[cls.s["comp"], cls.s["param"], cls.s["param_value"]],
         )
 
         pv_simple_params = pd.DataFrame(
             data=[
-                [self.s["pv"], self.s["eta_pv"], 0.16],
-                [self.s["inv"], self.s["eta_dc_ac"], 0.85],
-                [self.s["pv"], self.s["f_act"], 1.0],
-                [self.s["pv"], self.s["irrad_ref"], 1000.0],
+                [cls.s["pv"], cls.s["eta_pv"], 0.16],
+                [cls.s["inv"], cls.s["eta_dc_ac"], 0.85],
+                [cls.s["pv"], cls.s["f_act"], 1.0],
+                [cls.s["pv"], cls.s["irrad_ref"], 1000.0],
             ],
-            columns=[self.s["comp"], self.s["param"], self.s["param_value"]],
+            columns=[cls.s["comp"], cls.s["param"], cls.s["param_value"]],
         )
 
-        self.hp_params = pd.DataFrame(
+        cls.hp_params = pd.DataFrame(
             data=[
-                [self.s["hp"], self.s["c1_cop"], 1.229e00],
-                [self.s["hp"], self.s["c2_cop"], 5.549e-02],
-                [self.s["hp"], self.s["c3_cop"], 1.139e-04],
-                [self.s["hp"], self.s["c4_cop"], -1.128e-02],
-                [self.s["hp"], self.s["c5_cop"], -3.570e-06],
-                [self.s["hp"], self.s["c6_cop"], -7.234e-04],
-                [self.s["hp"], self.s["c1_heat_cap"], 7.055e-01],
-                [self.s["hp"], self.s["c2_heat_cap"], 3.945e-02],
-                [self.s["hp"], self.s["c3_heat_cap"], 1.433e-04],
-                [self.s["hp"], self.s["c4_heat_cap"], 2.768e-03],
-                [self.s["hp"], self.s["c5_heat_cap"], -1.069e-04],
-                [self.s["hp"], self.s["c6_heat_cap"], -2.494e-04],
-                [self.s["hp"], self.s["heat_cap_rated"], 2350.0],
-                [self.s["hp"], self.s["cop_rated"], 2.43],
+                [cls.s["hp"], cls.s["c1_cop"], 1.229e00],
+                [cls.s["hp"], cls.s["c2_cop"], 5.549e-02],
+                [cls.s["hp"], cls.s["c3_cop"], 1.139e-04],
+                [cls.s["hp"], cls.s["c4_cop"], -1.128e-02],
+                [cls.s["hp"], cls.s["c5_cop"], -3.570e-06],
+                [cls.s["hp"], cls.s["c6_cop"], -7.234e-04],
+                [cls.s["hp"], cls.s["c1_heat_cap"], 7.055e-01],
+                [cls.s["hp"], cls.s["c2_heat_cap"], 3.945e-02],
+                [cls.s["hp"], cls.s["c3_heat_cap"], 1.433e-04],
+                [cls.s["hp"], cls.s["c4_heat_cap"], 2.768e-03],
+                [cls.s["hp"], cls.s["c5_heat_cap"], -1.069e-04],
+                [cls.s["hp"], cls.s["c6_heat_cap"], -2.494e-04],
+                [cls.s["hp"], cls.s["heat_cap_rated"], 2350.0],
+                [cls.s["hp"], cls.s["cop_rated"], 2.43],
             ],
-            columns=[self.s["comp"], self.s["param"], self.s["param_value"]],
+            columns=[cls.s["comp"], cls.s["param"], cls.s["param_value"]],
         )
 
         pv_size = 1000.0
 
         # Set the heating capacity of the heat pump
-        self.hp_size = 2350.0
+        cls.hp_size = 2350.0
 
         sizes = pd.DataFrame(
             data=[
-                [self.s["sol_col"], self.gross_area],
-                [self.s["pv"], pv_size],
-                [self.s["hp"], self.hp_size],
+                [cls.s["sol_col"], cls.gross_area],
+                [cls.s["pv"], pv_size],
+                [cls.s["hp"], cls.hp_size],
             ],
-            columns=[self.s["comp"], self.s["cap"]],
+            columns=[cls.s["comp"], cls.s["cap"]],
         )
 
         # 6.25 m2 corresponds to 1000 Wdc peak power (with eta_pv = 16% and
         # f_act = 1.)
         sm_pv_area = pd.DataFrame(
-            data=[[self.s["pv"], 6.25]],
-            columns=[self.s["comp"], self.s["cap"]],
+            data=[[cls.s["pv"], 6.25]], columns=[cls.s["comp"], cls.s["cap"]]
         )
 
         gas_burn_params = pd.DataFrame(
-            data=[[self.s["gas_burn"], self.s["comb_eff"], 0.85]],
-            columns=[self.s["comp"], self.s["param"], self.s["param_value"]],
+            data=[[cls.s["gas_burn"], cls.s["comb_eff"], 0.85]],
+            columns=[cls.s["comp"], cls.s["param"], cls.s["param_value"]],
         )
 
         gas_burn_size = pd.DataFrame(
-            data=[[self.s["gas_burn"], 24000.0]],
-            columns=[self.s["comp"], self.s["cap"]],
+            data=[[cls.s["gas_burn"], 24000.0]],
+            columns=[cls.s["comp"], cls.s["cap"]],
         )
 
         el_res_params = pd.DataFrame(
-            data=[[self.s["el_res"], self.s["eta_el_res"], 1.0]],
-            columns=[self.s["comp"], self.s["param"], self.s["param_value"]],
+            data=[[cls.s["el_res"], cls.s["eta_el_res"], 1.0]],
+            columns=[cls.s["comp"], cls.s["param"], cls.s["param_value"]],
         )
 
         el_res_size = pd.DataFrame(
-            data=[[self.s["el_res"], 6500.0]],
-            columns=[self.s["comp"], self.s["cap"]],
+            data=[[cls.s["el_res"], 6500.0]], columns=[cls.s["comp"], cls.s["cap"]]
         )
 
         # without any parameters to call static methods
-        self.comp = Converter()
+        cls.comp = Converter()
 
         # for a year of operation
-        self.hwb_col = Converter(params=sol_hwb_params, sizes=sizes)
-        self.cd_col = Converter(params=sol_cd_params, sizes=sizes)
-        self.simple_pv_kWpeak = Converter(params=pv_simple_params, sizes=sizes)
+        cls.hwb_col = Converter(params=sol_hwb_params, sizes=sizes)
+        cls.cd_col = Converter(params=sol_cd_params, sizes=sizes)
+        cls.simple_pv_kWpeak = Converter(params=pv_simple_params, sizes=sizes)
 
-        self.simple_pv_area = Converter(
-            params=pv_simple_params, sizes=sm_pv_area
-        )
+        cls.simple_pv_area = Converter(params=pv_simple_params, sizes=sm_pv_area)
 
-        self.hp = Converter(params=self.hp_params, weather=mild, sizes=sizes)
+        cls.hp = Converter(params=cls.hp_params, weather=mild, sizes=sizes)
 
-        self.inst_gas_wh = Converter(
-            params=gas_burn_params, sizes=gas_burn_size
-        )
+        cls.inst_gas_wh = Converter(params=gas_burn_params, sizes=gas_burn_size)
 
-        self.el_res = Converter(params=el_res_params, sizes=el_res_size)
+        cls.el_res = Converter(params=el_res_params, sizes=el_res_size)
 
         # functional test for initiation with default inputs
-        self.params_none = Converter(params=None, sizes=1.0)
+        cls.params_none = Converter(params=None, sizes=1.0)
 
         # save under the test directory
-        self.outpath = os.path.dirname(__file__)
+        cls.outpath = os.path.dirname(__file__)
 
     def test_electric_resistance(self):
         """Tests parameter extraction"""
@@ -760,7 +745,7 @@ class ConverterTests(unittest.TestCase):
         # check if the error is less than
         perc = 10.0
 
-        self.assertTrue(err < perc / 100.0, "Error is {}!".format(err))
+        self.assertTrue(err < perc / 100.0, f"Error is {err}!")
 
         if self.plot_results:
             # plot duration curves
@@ -872,7 +857,7 @@ class ConverterTests(unittest.TestCase):
 
             # write to csv file
             pv_yields.to_csv(
-                os.path.join(self.outpath, "data/" + csv_file + case + ".csv")
+                os.path.join(self.outpath, f"data/{csv_file}" + case + ".csv")
             )
 
             # Check relative error of the annual cumulative value
@@ -886,9 +871,7 @@ class ConverterTests(unittest.TestCase):
 
             self.assertTrue(
                 err_kWpeak < perc / 100.0,
-                "Relative Error on the annual cumulative is {}%!".format(
-                    err_kWpeak * 100.0
-                ),
+                f"Relative Error on the annual cumulative is {err_kWpeak * 100.0}%!",
             )
 
             err_area = abs(
@@ -898,9 +881,7 @@ class ConverterTests(unittest.TestCase):
 
             self.assertTrue(
                 err_area < perc / 100.0,
-                "Relative Error on the annual cumulative is {}%!".format(
-                    err_area * 100.0
-                ),
+                f"Relative Error on the annual cumulative is {err_area * 100.0}%!",
             )
 
             if self.plot_results:
@@ -959,18 +940,16 @@ class StorageTests(unittest.TestCase):
     """Unit tests for the storage component models."""
 
     @classmethod
-    def setUp(self):
+    def setUp(cls):
         """Assigns values to test variables."""
-        self.random_state = np.random.RandomState(123)
+        cls.random_state = np.random.RandomState(123)
 
-        self.s = SwhLabels().set_prod_labels()
-        self.r = SwhLabels().set_res_labels()
-        self.c = SwhLabels().set_hous_labels()
+        cls.s = SwhLabels().set_prod_labels()
+        cls.r = SwhLabels().set_res_labels()
+        cls.c = SwhLabels().set_hous_labels()
 
         # for testing generic tank submethods
-        self.tank = Storage(
-            size=UnitConv(30).m3_gal(), type="sol_tank"
-        )  # .11356236 m3
+        cls.tank = Storage(size=UnitConv(30).m3_gal(), type="sol_tank")
 
     def test__tank_area(self):
         """Test lower and upper tank area calculation
@@ -1007,13 +986,7 @@ class StorageTests(unittest.TestCase):
         on insulation thickness and its
         specific heat conductivity
         """
-        insul_thickness = 0.04
-        spec_hea_conductivity = 0.04
-
-        self.assertEqual(
-            self.tank._thermal_transmittance(),
-            spec_hea_conductivity / insul_thickness,
-        )
+        self.assertEqual(self.tank._thermal_transmittance(), 1.0)
 
     def test__thermal_loss(self):
         """Calculates heat loss rate through a tank wall"""

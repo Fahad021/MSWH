@@ -46,44 +46,34 @@ class UnitConv(object):
 
         self.x_in = x_in
 
-        if (scale_in == "k") or (scale_in == "kilo"):
+        if scale_in in ["k", "kilo"]:
             self.scale_in = 1000.0
-        elif (
-            (scale_in == "million")
-            or (scale_in == "M")
-            or (scale_in == "MM")
-            or (scale_in == "mega")
-        ):
+        elif scale_in in ["million", "M", "MM", "mega"]:
             self.scale_in = 1e6
-        elif (scale_in == "giga") or (scale_in == "G"):
+        elif scale_in in ["giga", "G"]:
             self.scale_in = 1e9
-        elif (scale_in == "tera") or (scale_in == "T"):
+        elif scale_in in ["tera", "T"]:
             self.scale_in = 1e12
-        elif (scale_in == "peta") or (scale_in == "P"):
+        elif scale_in in ["peta", "P"]:
             self.scale_in = 1e15
-        elif (scale_in == "milli") or (scale_in == "m"):
+        elif scale_in in ["milli", "m"]:
             self.scale_in = 1e-3
         elif scale_in == "micro":
             self.scale_in = 1e-6
         else:
             self.scale_in = scale_in
 
-        if (scale_out == "k") or (scale_out == "kilo"):
+        if scale_out in ["k", "kilo"]:
             self.scale_out = 1000.0
-        elif (
-            (scale_out == "million")
-            or (scale_out == "M")
-            or (scale_out == "MM")
-            or (scale_out == "mega")
-        ):
+        elif scale_out in ["million", "M", "MM", "mega"]:
             self.scale_out = 1e6
-        elif (scale_out == "giga") or (scale_out == "G"):
+        elif scale_out in ["giga", "G"]:
             self.scale_out = 1e9
-        elif (scale_out == "tera") or (scale_out == "T"):
+        elif scale_out in ["tera", "T"]:
             self.scale_out = 1e12
-        elif (scale_out == "peta") or (scale_out == "P"):
+        elif scale_out in ["peta", "P"]:
             self.scale_out = 1e15
-        elif (scale_out == "milli") or (scale_out == "m"):
+        elif scale_out in ["milli", "m"]:
             self.scale_out = 1e-3
         elif scale_out == "micro":
             self.scale_out = 1e-6
@@ -452,13 +442,9 @@ class Utility(object):
                     self.quantity_in, scale_in="k", scale_out="MM"
                 ).Btu_J(unit_in="J")
             else:
-                raise ValueError(
-                    "{} is not yet supported as output unit".format(unit_out)
-                )
+                raise ValueError(f"{unit_out} is not yet supported as output unit")
 
-        if unit_in != "kWh" and unit_in != "kJ":
-            raise ValueError(
-                "{} is not yet supported as input unit.".format(unit_in)
-            )
+        if unit_in not in ["kWh", "kJ"]:
+            raise ValueError(f"{unit_in} is not yet supported as input unit.")
 
         return gas_use
