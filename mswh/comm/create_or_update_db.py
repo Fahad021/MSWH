@@ -26,51 +26,30 @@ log.setLevel(logging.DEBUG)
 
 test_db_name = "mswh_system_input.db"
 
-# set write_new to True if you'd like to reinitiate the db. A copy of the
-# 'swh_system_input.db' will be saved with a 'bckp_' prefix.
+# populate tables
+# Dynamic path implementation
+# This check should always pass unless the git repo is restructured
+if os.getcwd().endswith("comm"):
+    output_path = (
+        r"W:\Non-APS\CEC PIER\PIER Solar Water Heating\Analysis\Results\Test"
+    )
+else:
+    msg = "Not currently operating out of comm directory."
+    log.info(msg)
 
-# create database using python
-sql_scripts = list()
-
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# scripts to drop tabes if rewriting them
-
-sql_scripts.append(
+sql_scripts = [
     """DROP TABLE IF EXISTS `sys_1_system_list`;
-"""
-)
-sql_scripts.append(
+""",
     """DROP TABLE IF EXISTS `sys_2_system_configurations`;
-"""
-)
-sql_scripts.append(
+""",
     """DROP TABLE IF EXISTS `sys_3_components`;
-"""
-)
-
-# component sizing tables
-
-sql_scripts.append(
+""",
     """DROP TABLE IF EXISTS `comp_1_sizing_regression`;
-"""
-)
-sql_scripts.append(
+""",
     """DROP TABLE IF EXISTS `discrete_component_sizes`;
-"""
-)
-
-# component performance parameters
-
-sql_scripts.append(
+""",
     """DROP TABLE IF EXISTS `component_performance`;
-"""
-)
-
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# DB schema
-
-# lists system configurations
-sql_scripts.append(
+""",
     """CREATE TABLE `sys_1_system_list`
 (
     `System ID` INTEGER NOT NULL,
@@ -79,10 +58,7 @@ sql_scripts.append(
     `Retrofit` BOOLEAN NOT NULL,
 
     PRIMARY KEY (`System ID`)
-);"""
-)
-
-sql_scripts.append(
+);""",
     """CREATE TABLE `sys_3_components`
 (
     `Component ID` INTEGER NOT NULL,
@@ -91,11 +67,7 @@ sql_scripts.append(
     `Component Size Unit` TEXT NOT NULL,
 
     PRIMARY KEY (`Component ID`)
-);"""
-)
-
-# defines system configurations
-sql_scripts.append(
+);""",
     """CREATE TABLE `sys_2_system_configurations`
 (
     `System ID` INTEGER NOT NULL,
@@ -104,11 +76,7 @@ sql_scripts.append(
 
     FOREIGN KEY (`System ID`) REFERENCES `sys_1_system_list`(`System ID`),
     FOREIGN KEY (`Component ID`) REFERENCES `sys_3_components`(`Component ID`)
-);"""
-)
-
-# components, technologies and performance parameters
-sql_scripts.append(
+);""",
     """CREATE TABLE `component_performance`
 (
     `Component ID` INTEGER NOT NULL,
@@ -117,11 +85,7 @@ sql_scripts.append(
     `Performance Parameter Unit` TEXT NOT NULL,
 
     FOREIGN KEY (`Component ID`) REFERENCES `sys_3_components`(`Component ID`)
-);"""
-)
-
-# component sizing
-sql_scripts.append(
+);""",
     """CREATE TABLE `comp_1_sizing_regression`
 (
     `Component ID` INTEGER NOT NULL,
@@ -130,36 +94,14 @@ sql_scripts.append(
     `Component Size Function Of` TEXT NOT NULL,
 
     FOREIGN KEY (`Component ID`) REFERENCES `sys_3_components`(`Component ID`)
-);"""
-)
-
-# discrete component sizes available on the market
-sql_scripts.append(
+);""",
     """CREATE TABLE `discrete_component_sizes`
 (
     `Component ID` INTEGER NOT NULL,
     `Discrete Size` TEXT NOT NULL,
 
     FOREIGN KEY (`Component ID`) REFERENCES `sys_3_components`(`Component ID`)
-);"""
-)
-
-# populate tables
-# Dynamic path implementation
-# This check should always pass unless the git repo is restructured
-if os.getcwd()[-4:] == "comm":
-    output_path = (
-        r"W:\Non-APS\CEC PIER\PIER Solar Water Heating\Analysis\Results\Test"
-    )
-else:
-    msg = "Not currently operating out of comm directory."
-    log.info(msg)
-
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# scripts to populate the db
-
-# component list
-sql_scripts.append(
+);""",
     """INSERT INTO `sys_3_components` (`Component ID`, `Component`, `Component Technology`, `Component Size Unit`) VALUES
 (1, 'solar collector', 'flat plate', 'm2'),
 (2, 'solar collector', 'tubular', 'm2'),
@@ -176,11 +118,7 @@ sql_scripts.append(
 (13, 'solar pump', 'fixed-speed circulator pump', 'W'),
 (14, 'piping', 'dhw pipes', 'm'),
 (15, 'inverter', 'dc-ac', 'W')
-;"""
-)
-
-# system list
-sql_scripts.append(
+;""",
     """INSERT INTO `sys_1_system_list` (`System ID`, `System`, `System Description`, `Retrofit`) VALUES
 (1, 'gas tank wh', 'basecase', 'false'),
 (2, 'electric tank wh', 'basecase', 'false'),
@@ -190,13 +128,7 @@ sql_scripts.append(
 (6, 'solar thermal new', 'solar thermal collector, solar tank, instantaneous gas WH', 'false'),
 (7, 'solar thermal electric backup', 'solar thermal collector, solar tank, instantaneous electric WH', 'false'),
 (8, 'solar electric', 'PV, HP tank WH with electric in-tank backup', 'false')
-;"""
-)
-
-# system configuration
-# any components that exist in both the base and policy cases are omited in the list
-# any components inherited from the basecase (case: retrofits) are omited in the list
-sql_scripts.append(
+;""",
     """INSERT INTO `sys_2_system_configurations` (`System ID`, `Component ID`, `Component Function`) VALUES
 (1, 5, 'stores domestic hot water, adds heat through gas combustion'),
 (5, 1, 'solar thermal collector'),
@@ -210,28 +142,7 @@ sql_scripts.append(
 (6, 12, 'circulates dhw in the secondary (distribution) loop, if community scale'),
 (6, 13, 'circulates dhw in the primary (solar) loop'),
 (6, 14, 'distribution pipes')
-;"""
-)
-
-# Notes:
-# Performance Parameter string may be repeated only for storage components.
-# U-value = 1/ R-value = specific heat conductivity / insulation thickness
-# unit conversions http://www.fomicom.com/files/insulation%20values.pdf:
-# 1 ft²·°F·h/Btu ≈ 0.1761 K·m²/W, or 1 K·m²/W ≈ 5.67446ft²·°F·h/Btu
-# values chosen for piping loss equal R2.6, in line with CSI recommendation
-# values chosen for solar tank loss equal R12, in line with CSI recommendation
-# values chosen for gas tank WH are in line with EL1 WH rule 2010, 30 gal tank
-# with ~R2.1
-# pipe diameter sizing paremeters are derived in the pipe sizing and
-# pricing notebook (see scripts folder), the first
-# higher value gets chosen. Discrete diameters taken from RS Means
-# pipe pricing parameters include insulation cost.
-# They are provided in this table and not in the component
-# sizing table, since the price depends both on the diameter and the length
-# Coil efficiency for any indirect tank excludes the approach temperature
-# Inverter efficiency includes all losses related to dc-ac conversion
-
-sql_scripts.append(
+;""",
     """INSERT INTO `component_performance` (`Component ID`, `Performance Parameter`, `Performance Parameter Value`, `Performance Parameter Unit`) VALUES
 (1, 'interc hwb', .753, '-'),
 (1, 'slope hwb', -4.025, 'W/m2K'),
@@ -282,25 +193,7 @@ sql_scripts.append(
 (14, 'circulation', 0., '-'),
 (14, 'longest branch length fraction', 1., '-'),
 (15, 'DC to AC efficiency', .85, '-')
-;"""
-)
-
-# component sizing
-
-# `linear` fits (y = b + m * x) have parameters in order of [b, m]
-# `power` fits (y = m * (x ^ b)) have parameters in order of [m, b]
-
-# a) solar collector (solar thermal panel area) - CSI sizing rule:
-# upper limit 1.25 * GPD [sqft]
-# b) conventional storage tanks: (https://www.energy.gov/energysaver/water-heating/sizing-new-water-heater) peak hourly demand +/- 2 gal, using +/- 0 gal.
-# c) solar storage tank: CSI sizing rule lower limit
-# 1.25 * collector_area_sqft [gal]
-# d) instantaneous water heaters: based on email from Victor and standard input powers taken from homedepot.com
-
-# note that for the retrofits the size of the backup tank WHs gets taken
-# from the basecase, since they remain in each of the households
-# units: SI
-sql_scripts.append(
+;""",
     """INSERT INTO `comp_1_sizing_regression` (`Component ID`, `Component Size Fit`, `Component Size Fit Parameters`, `Component Size Function Of`) VALUES
 (1, 'linear', '[0., 0.111483648]', 'Demand Estimate [GPD]'),
 (2, 'linear', '[2.2297, 0.7432]', 'Occupancy'),
@@ -313,19 +206,12 @@ sql_scripts.append(
 (13, 'power', '[7.5101, 0.5322]', 'Occupancy'),
 (14, 'linear', '[0., 3.048]', 'Households Per Project'),
 (15, 'linear', '[0., 11111.]', 'Occupancy')
-;"""
-)
-
-# Discrete sizes for component 5 are the union of sizes
-# available in public CEC, CCMS, and AHRI certification datasets
-sql_scripts.append(
+;""",
     """INSERT INTO `discrete_component_sizes` (`Component ID`, `Discrete Size`) VALUES
 (5, '[20, 28, 29, 30, 33, 34, 37, 38, 39, 40, 46, 47, 48, 49, 50, 53, 55, 60, 63, 65, 71, 72, 73, 75, 80, 81, 93, 95, 96, 98, 100, 112]')
-;"""
-)
-
-sql_scripts.append("""PRAGMA foreign_keys = OFF;""")
-
+;""",
+    """PRAGMA foreign_keys = OFF;""",
+]
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # writing and saving the db
 
@@ -345,7 +231,7 @@ weather_cons_db_name_fulpath = os.path.join(
 
 
 if os.path.exists(template_db_fulpath):
-    bckp_filename = "bckp_" + test_db_name
+    bckp_filename = f"bckp_{test_db_name}"
     if os.path.exists(bckp_filename):
         os.remove(os.path.join(os.path.dirname(__file__), bckp_filename))
     os.rename(

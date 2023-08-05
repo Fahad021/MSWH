@@ -22,7 +22,7 @@ class SourceAndSinkTests(unittest.TestCase):
     """
 
     @classmethod
-    def setUp(self):
+    def setUp(cls):
         """Instantiates a test object"""
         # read in data from the database
         # assuming tests are run from swh
@@ -42,10 +42,10 @@ class SourceAndSinkTests(unittest.TestCase):
             msg = "Failed to read input tables from {}."
             log.error(msg.format(weather_db_path))
 
-        self.weather = SourceAndSink(input_dfs=inputs)
+        cls.weather = SourceAndSink(input_dfs=inputs)
 
         # get labels
-        self.c = SwhLabels().set_hous_labels()
+        cls.c = SwhLabels().set_hous_labels()
 
     def test_irradiation_and_water_main(self):
         """Tests a day of irradiation on a tilted

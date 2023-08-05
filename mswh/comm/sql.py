@@ -51,11 +51,11 @@ class Sql(object):
         cursor = self.db.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
         tables = cursor.fetchall()
-        data = dict()
+        data = {}
         for table_name in tables:
             table_name = table_name[0]
             data[table_name] = pd.read_sql_query(
-                """ SELECT * FROM '{}' """.format(table_name), self.db
+                f""" SELECT * FROM '{table_name}' """, self.db
             )
 
         if close:
@@ -80,13 +80,9 @@ class Sql(object):
             df: pandas dataframe
                 Sql table read in as a pandas df.
         """
-        df = pd.read_sql(
-            """ SELECT * FROM '{}' """.format(table_name),
-            self.db,
-            index_col=None,
+        return pd.read_sql(
+            f""" SELECT * FROM '{table_name}' """, self.db, index_col=None
         )
-
-        return df
 
     def pd2table(self, df, table_name, close=False):
         """Write a dataframe out to the database.

@@ -195,10 +195,7 @@ class SystemTests(unittest.TestCase):
         def demand_estimate(occ):
             if occ == 1:
                 return 20.0
-            if occ == 2:
-                return 35.0
-            else:
-                return 35.0 + 10.0 * (occ - 2.0)
+            return 35.0 if occ == 2 else 35.0 + 10.0 * (occ - 2.0)
 
         peakload_com[self.c["dem_estimate"]] = loads_com[self.c["occ"]].apply(
             lambda x: demand_estimate(x)

@@ -14,12 +14,12 @@ class PlotTests(unittest.TestCase):
     """Basic functionality tests for plotting methods"""
 
     @classmethod
-    def setUp(self):
+    def setUp(cls):
         """Instantiates a test object"""
-        self.df = pd.DataFrame(data=[[1, 2], [1, 2], [2, 3]])
-        self.list = [[1, 2, 3], [5, 4], [1, 2, 3, 4], [4, 5, 6]]
-        self.save_image = True
-        self.outpath = os.path.dirname(__file__)
+        cls.df = pd.DataFrame(data=[[1, 2], [1, 2], [2, 3]])
+        cls.list = [[1, 2, 3], [5, 4], [1, 2, 3, 4], [4, 5, 6]]
+        cls.save_image = True
+        cls.outpath = os.path.dirname(__file__)
 
     def test_scatter(self):
         """Create scatter plot"""

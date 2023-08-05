@@ -85,7 +85,7 @@ class Converter(object):
             if self.s["sol_col"] in components:
                 self.components.append(self.s["sol_col"])
 
-                self.params_sol_col = dict()
+                self.params_sol_col = {}
                 # this method of collector model selection prefers the
                 # model under ```try:``` as long as the parameters were
                 # found in the parameter table
@@ -121,23 +121,20 @@ class Converter(object):
             if self.s["pv"] in components:
                 self.components.append(self.s["pv"])
 
-                self.params_pv = dict()
-
-                # Extract the model parameters
-                self.params_pv[self.s["eta_pv"]] = params.loc[
-                    params[self.s["param"]] == self.s["eta_pv"],
-                    self.s["param_value"],
-                ].values[0]
-
-                self.params_pv[self.s["f_act"]] = params.loc[
-                    params[self.s["param"]] == self.s["f_act"],
-                    self.s["param_value"],
-                ].values[0]
-
-                self.params_pv[self.s["irrad_ref"]] = params.loc[
-                    params[self.s["param"]] == self.s["irrad_ref"],
-                    self.s["param_value"],
-                ].values[0]
+                self.params_pv = {
+                    self.s["eta_pv"]: params.loc[
+                        params[self.s["param"]] == self.s["eta_pv"],
+                        self.s["param_value"],
+                    ].values[0],
+                    self.s["f_act"]: params.loc[
+                        params[self.s["param"]] == self.s["f_act"],
+                        self.s["param_value"],
+                    ].values[0],
+                    self.s["irrad_ref"]: params.loc[
+                        params[self.s["param"]] == self.s["irrad_ref"],
+                        self.s["param_value"],
+                    ].values[0],
+                }
 
                 msg = "Photovoltaic is setup."
                 log.info(msg)
@@ -145,106 +142,102 @@ class Converter(object):
             if self.s["inv"] in components:
                 self.components.append(self.s["inv"])
 
-                self.params_inv = dict()
-
-                # extract the total dc-ac conversion efficiency
-                self.params_inv[self.s["eta_dc_ac"]] = params.loc[
-                    params[self.s["param"]] == self.s["eta_dc_ac"],
-                    self.s["param_value"],
-                ].values[0]
+                self.params_inv = {
+                    self.s["eta_dc_ac"]: params.loc[
+                        params[self.s["param"]] == self.s["eta_dc_ac"],
+                        self.s["param_value"],
+                    ].values[0]
+                }
 
                 msg = "Inverter is setup."
                 log.info(msg)
 
             if self.s["hp"] in components:
                 self.components.append(self.s["hp"])
-                self.params_hp = dict()
-                # Extract the model parameters
-                self.params_hp[self.s["c1_cop"]] = params.loc[
-                    params[self.s["param"]] == self.s["c1_cop"],
-                    self.s["param_value"],
-                ].values[0]
-                self.params_hp[self.s["c2_cop"]] = params.loc[
-                    params[self.s["param"]] == self.s["c2_cop"],
-                    self.s["param_value"],
-                ].values[0]
-                self.params_hp[self.s["c3_cop"]] = params.loc[
-                    params[self.s["param"]] == self.s["c3_cop"],
-                    self.s["param_value"],
-                ].values[0]
-                self.params_hp[self.s["c4_cop"]] = params.loc[
-                    params[self.s["param"]] == self.s["c4_cop"],
-                    self.s["param_value"],
-                ].values[0]
-                self.params_hp[self.s["c5_cop"]] = params.loc[
-                    params[self.s["param"]] == self.s["c5_cop"],
-                    self.s["param_value"],
-                ].values[0]
-                self.params_hp[self.s["c6_cop"]] = params.loc[
-                    params[self.s["param"]] == self.s["c6_cop"],
-                    self.s["param_value"],
-                ].values[0]
-                self.params_hp[self.s["c1_heat_cap"]] = params.loc[
-                    params[self.s["param"]] == self.s["c1_heat_cap"],
-                    self.s["param_value"],
-                ].values[0]
-                self.params_hp[self.s["c2_heat_cap"]] = params.loc[
-                    params[self.s["param"]] == self.s["c2_heat_cap"],
-                    self.s["param_value"],
-                ].values[0]
-                self.params_hp[self.s["c3_heat_cap"]] = params.loc[
-                    params[self.s["param"]] == self.s["c3_heat_cap"],
-                    self.s["param_value"],
-                ].values[0]
-                self.params_hp[self.s["c4_heat_cap"]] = params.loc[
-                    params[self.s["param"]] == self.s["c4_heat_cap"],
-                    self.s["param_value"],
-                ].values[0]
-                self.params_hp[self.s["c5_heat_cap"]] = params.loc[
-                    params[self.s["param"]] == self.s["c5_heat_cap"],
-                    self.s["param_value"],
-                ].values[0]
-                self.params_hp[self.s["c6_heat_cap"]] = params.loc[
-                    params[self.s["param"]] == self.s["c6_heat_cap"],
-                    self.s["param_value"],
-                ].values[0]
-                self.params_hp[self.s["heat_cap_rated"]] = params.loc[
-                    params[self.s["param"]] == self.s["heat_cap_rated"],
-                    self.s["param_value"],
-                ].values[0]
-                self.params_hp[self.s["cop_rated"]] = params.loc[
-                    params[self.s["param"]] == self.s["cop_rated"],
-                    self.s["param_value"],
-                ].values[0]
-
+                self.params_hp = {
+                    self.s["c1_cop"]: params.loc[
+                        params[self.s["param"]] == self.s["c1_cop"],
+                        self.s["param_value"],
+                    ].values[0],
+                    self.s["c2_cop"]: params.loc[
+                        params[self.s["param"]] == self.s["c2_cop"],
+                        self.s["param_value"],
+                    ].values[0],
+                    self.s["c3_cop"]: params.loc[
+                        params[self.s["param"]] == self.s["c3_cop"],
+                        self.s["param_value"],
+                    ].values[0],
+                    self.s["c4_cop"]: params.loc[
+                        params[self.s["param"]] == self.s["c4_cop"],
+                        self.s["param_value"],
+                    ].values[0],
+                    self.s["c5_cop"]: params.loc[
+                        params[self.s["param"]] == self.s["c5_cop"],
+                        self.s["param_value"],
+                    ].values[0],
+                    self.s["c6_cop"]: params.loc[
+                        params[self.s["param"]] == self.s["c6_cop"],
+                        self.s["param_value"],
+                    ].values[0],
+                    self.s["c1_heat_cap"]: params.loc[
+                        params[self.s["param"]] == self.s["c1_heat_cap"],
+                        self.s["param_value"],
+                    ].values[0],
+                    self.s["c2_heat_cap"]: params.loc[
+                        params[self.s["param"]] == self.s["c2_heat_cap"],
+                        self.s["param_value"],
+                    ].values[0],
+                    self.s["c3_heat_cap"]: params.loc[
+                        params[self.s["param"]] == self.s["c3_heat_cap"],
+                        self.s["param_value"],
+                    ].values[0],
+                    self.s["c4_heat_cap"]: params.loc[
+                        params[self.s["param"]] == self.s["c4_heat_cap"],
+                        self.s["param_value"],
+                    ].values[0],
+                    self.s["c5_heat_cap"]: params.loc[
+                        params[self.s["param"]] == self.s["c5_heat_cap"],
+                        self.s["param_value"],
+                    ].values[0],
+                    self.s["c6_heat_cap"]: params.loc[
+                        params[self.s["param"]] == self.s["c6_heat_cap"],
+                        self.s["param_value"],
+                    ].values[0],
+                    self.s["heat_cap_rated"]: params.loc[
+                        params[self.s["param"]] == self.s["heat_cap_rated"],
+                        self.s["param_value"],
+                    ].values[0],
+                    self.s["cop_rated"]: params.loc[
+                        params[self.s["param"]] == self.s["cop_rated"],
+                        self.s["param_value"],
+                    ].values[0],
+                }
                 msg = "Heat pump is setup."
                 log.info(msg)
 
             if self.s["el_res"] in components:
                 self.components.append(self.s["el_res"])
 
-                self.params_el_res = dict()
-
-                # Extract electric resistance parameters
-                self.params_el_res[self.s["eta_el_res"]] = params.loc[
-                    params[self.s["param"]] == self.s["eta_el_res"],
-                    self.s["param_value"],
-                ].values[0]
+                self.params_el_res = {
+                    self.s["eta_el_res"]: params.loc[
+                        params[self.s["param"]] == self.s["eta_el_res"],
+                        self.s["param_value"],
+                    ].values[0]
+                }
 
             if self.s["gas_burn"] in components:
                 self.components.append(self.s["gas_burn"])
 
-                self.params_gas_burn = dict()
+                self.params_gas_burn = {
+                    self.s["comb_eff"]: params.loc[
+                        params[self.s["param"]] == self.s["comb_eff"],
+                        self.s["param_value"],
+                    ].values[0]
+                }
 
-                # Extract gas burner parameters
-                self.params_gas_burn[self.s["comb_eff"]] = params.loc[
-                    params[self.s["param"]] == self.s["comb_eff"],
-                    self.s["param_value"],
-                ].values[0]
+                # when adding components, extract parameters similarly
 
-            # when adding components, extract parameters similarly
-
-        elif not isinstance(params, pd.DataFrame):
+        else:
             self.use_defaults = True
 
         # extract component size/capacity (see setter for details)
@@ -288,7 +281,7 @@ class Converter(object):
     @size.setter
     def size(self, value):
         """Re-extracts sizes from a dataframe"""
-        set_sizes = dict()
+        set_sizes = {}
 
         if (not isinstance(value, pd.DataFrame)) and (value == 1.0):
             # assign unit size
@@ -432,13 +425,7 @@ class Converter(object):
             self.params_hp[self.s["c6_cop"]],
         )
 
-        # Dictionary containing the results
-        res = {}
-        res["cop"] = cop
-        res["heat_cap"] = heat_cap
-        res["el_use"] = heat_cap / cop
-
-        return res
+        return {"cop": cop, "heat_cap": heat_cap, "el_use": heat_cap / cop}
 
     @staticmethod
     def _heat_pump(
@@ -498,8 +485,7 @@ class Converter(object):
         T_wet_bulb_C = UnitConv(T_wet_bulb).degC_K(unit_in="K")
         T_tank_C = UnitConv(T_tank).degC_K(unit_in="K")
 
-        # Calculate performance factor
-        performance = (
+        return (
             C1
             + C2 * T_wet_bulb_C
             + C3 * T_wet_bulb_C * T_wet_bulb_C
@@ -507,8 +493,6 @@ class Converter(object):
             + C5 * T_tank_C * T_tank_C
             + C6 * T_wet_bulb_C * T_tank_C
         )
-
-        return performance
 
     def electric_resistance(self, Q_dem):
         """Electric resistance heater model. Can be
@@ -539,14 +523,11 @@ class Converter(object):
             eff=self.params_el_res[self.s["eta_el_res"]],
         )
 
-        # return the heat rate of heat delivered and gas consumed
-        res = {
+        return {
             self.r["q_del_bckp"]: Q_del,
             self.r["el_use"]: P_el_use,
             self.r["q_unmet"]: Q_unmet,
         }
-
-        return res
 
     def gas_burner(self, Q_dem):
         """Gas burner model. Used both
@@ -578,14 +559,11 @@ class Converter(object):
             Q_nom=self.size[self.s["gas_burn"]],
         )
 
-        # return the heat rate of heat delivered and gas consumed
-        res = {
+        return {
             self.r["q_del_bckp"]: Q_del,
             self.r["gas_use"]: Q_en_use,
             self.r["q_unmet"]: Q_unmet,
         }
-
-        return res
 
     @staticmethod
     def _heater(Q_dem, eff=0.85, Q_nom=None):
@@ -735,9 +713,7 @@ class Converter(object):
             msg = "\nCalculated solar collector gain time series.\n"
             log.info(msg)
 
-        res = {"Q_gain": self.sol_col_gain, "eff": self.sol_col_eff}
-
-        return res
+        return {"Q_gain": self.sol_col_gain, "eff": self.sol_col_eff}
 
     @staticmethod
     def _hwb_solar_collector(
@@ -788,10 +764,7 @@ class Converter(object):
             inc_rad_mod = inc_rad
             inc_rad_mod[inc_rad == 0] = -np.inf
         elif np.isscalar(inc_rad):
-            if inc_rad == 0.0:
-                inc_rad_mod = -np.inf
-            else:
-                inc_rad_mod = inc_rad
+            inc_rad_mod = -np.inf if inc_rad == 0.0 else inc_rad
         else:
             msg = "Solar irradiation data type {} seems not supported."
             log.error(msg.format(type(inc_rad)))
@@ -862,10 +835,7 @@ class Converter(object):
             inc_rad_mod = inc_rad
             inc_rad_mod[inc_rad == 0] = -np.inf
         elif np.isscalar(inc_rad):
-            if inc_rad == 0.0:
-                inc_rad_mod = -np.inf
-            else:
-                inc_rad_mod = inc_rad
+            inc_rad_mod = -np.inf if inc_rad == 0.0 else inc_rad
         else:
             msg = "Solar irradiation data type {} seems not supported."
             log.error(msg.format(type(inc_rad)))
@@ -915,9 +885,7 @@ class Converter(object):
             # default to 1000. kW_peak or it's equivalent in m2 for
             # default efficiency
             panel_size = 1000.0 if use_p_peak else 6.25
-            log.info(
-                "Could not get panel size. Setting it to {}".format(panel_size)
-            )
+            log.info(f"Could not get panel size. Setting it to {panel_size}")
 
         # Set panel size according to use_p_peak value
         if use_p_peak:
@@ -1019,16 +987,14 @@ class Converter(object):
         # Calculate the generated power according to the given parameters:
         # Either panel area and panel efficiency
         # or peak power and reference irradiation are used for calculation
-        if p_peak == None:
+        if p_peak is None:
             pv_power_dc = panel_area * f_act * eta_pv * irrad
         else:
             pv_power_dc = (p_peak / irrad_ref) * irrad
 
         pv_power_ac = Distribution._dc_to_ac(pv_power_dc, conv_eff=eta_dc_ac)
 
-        pv_power = {"ac": pv_power_ac, "dc": pv_power_dc}
-
-        return pv_power
+        return {"ac": pv_power_ac, "dc": pv_power_dc}
 
 
 class Storage(object):

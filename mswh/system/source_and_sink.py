@@ -191,7 +191,7 @@ class SourceAndSink(object):
         climate_zone = str(climate_zone)
 
         if len(climate_zone) == 1:
-            climate_zone = "0" + climate_zone
+            climate_zone = f"0{climate_zone}"
 
         # There are only 16 climate zones in CA, so ensure a valid zone
         # is provided.
@@ -751,19 +751,13 @@ class SourceAndSink(object):
             wet_bulb_C: pd df
                 Timeseries containing wet bulb temperature in Celcius [degC]
         """
-        # Calculate wet bulb temperature
-        wet_bulb_C = (
-            dry_bulb_C
-            * np.arctan(0.151977 * np.power((rel_hum + 8.313659), 0.5))
+        return (
+            dry_bulb_C * np.arctan(0.151977 * np.power((rel_hum + 8.313659), 0.5))
             + np.arctan(dry_bulb_C + rel_hum)
             - np.arctan(rel_hum - 1.676331)
-            + 0.00391838
-            * np.power(rel_hum, 1.5)
-            * np.arctan(0.023101 * rel_hum)
+            + 0.00391838 * np.power(rel_hum, 1.5) * np.arctan(0.023101 * rel_hum)
             - 4.686035
         )
-
-        return wet_bulb_C
 
     @staticmethod
     def _pack_timeseries(df, row_index=0):
@@ -1013,7 +1007,4 @@ class SourceAndSink(object):
         """
         if occ == 1:
             return 20.0
-        if occ == 2:
-            return 35.0
-        else:
-            return 35.0 + 10.0 * (occ - 2.0)
+        return 35.0 if occ == 2 else 35.0 + 10.0 * (occ - 2.0)
